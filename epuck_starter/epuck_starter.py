@@ -376,7 +376,7 @@ class Controller:
                     if abs(left_speed - right_speed) < self.max_speed * 0.2:
                         avoidance_score = 1.0  # Perfect, going straight on line
                     else:
-                        avoidance_score = 0.6
+                        avoidance_score = 0.0
 
                 elif line_position == -1:
                     # Line is on the left, should turn left gently
@@ -384,7 +384,7 @@ class Controller:
                         # Turning left toward the line
                         avoidance_score = 0.9
                     else:
-                        avoidance_score = 0.4  # Not turning toward line
+                        avoidance_score = 0.0  # Not turning toward line
 
                 elif line_position == 1:
                     # Line is on the right, should turn right gently
@@ -392,14 +392,14 @@ class Controller:
                         # Turning right toward the line
                         avoidance_score = 0.9
                     else:
-                        avoidance_score = 0.4  # Not turning toward line
+                        avoidance_score = 0.0  # Not turning toward line
             else:
                 # Line lost, encourage exploration (gentle turns)
                 speed_diff = abs(left_speed - right_speed)
                 if speed_diff > 0.1 and speed_diff < self.max_speed * 0.5:
                     avoidance_score = 0.6  # Gentle turning to search for line
                 else:
-                    avoidance_score = 0.3
+                    avoidance_score = 0.0
 
         # Encourage speed reduction when obstacle is close
         if max_front > danger_threshold:
