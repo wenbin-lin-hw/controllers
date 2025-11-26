@@ -101,14 +101,6 @@ class Controller:
         self.position = 0, 0
 
     def forwardFitness(self):
-        """
-        Forward movement fitness function
-
-        Parameters:
-            left_speed: Left wheel speed
-            right_speed: Right wheel speed
-            max_speed: Maximum speed
-        """
         # Reward mechanism
         # 1. The faster both wheels move, the better (encourage fast movement)
         speed_reward = (abs(self.velocity_left) + abs(self.velocity_right)) / (2 * self.max_speed)
@@ -124,58 +116,20 @@ class Controller:
 
         # Combined fitness
         fitness = speed_reward * straightness_reward - direction_penalty
-        # if self.real_speed <0.005:
-        #     fitness = fitness-0.05
-        # print("real speed:",self.real_speed)
-        # # if self.is_on_edge:
-        # #     fitness = 0.0
-        # if self.real_speed>=0.07:
-        #     fitness = 1.0
-        # elif self.real_speed<0.07 and self.real_speed>=0.06:
-        #     fitness = 0.8
-        # elif self.real_speed<0.06 and self.real_speed>=0.05:
-        #     fitness = 0.6
-        # elif self.real_speed<0.05 and self.real_speed>=0.04:
-        #     fitness = 0.4
-        # elif self.real_speed<0.04 and self.real_speed>=0.02:
-        #     fitness = 0.2
-        # elif self.real_speed<0.02 and
-        #     fitness = 0.1
-        # else:
-        #     fitness = 0.0
-        # if self.real_speed < 0.01 and max(abs(self.velocity_left), abs(self.velocity_right)) > 0.5:
-        #     return 0.0
         if self.real_speed < 0.01:
             fitness -= 0.1
         if self.is_on_edge:
-            # if self.action_number % 100 == 0:
-            #     print("is on the edge......")
             fitness -= 0.2
-        # if abs(self.velocity_right)!=0
-        #     if abs(self.velocity_left)/abs(self.velocity_right)>0.8 and self.velocity_right*self.velocity_left<0:
-        #         fitness=0.0
 
-        return max(0, fitness)  # Ensure fitness is non-negative
+        return max(0, fitness)
 
     def followLineFitness(self):
-        """
-        Improved line following fitness function
-
-        Key improvements:
-        1. Better sensor interpretation with dynamic thresholds
-        2. Smooth rewards for gradual corrections
-        3. Speed maintenance on the line
-        4. Recovery mechanism when line is lost
-        """
         left_sensor = self.left_ir.getValue()
         center_sensor = self.center_ir.getValue()
         right_sensor = self.right_ir.getValue()
         left_speed = self.velocity_left
         right_speed = self.velocity_right
         max_speed = self.max_speed
-
-        # Dynamic threshold - adjust based on sensor readings
-        # Typically, dark line gives lower values (< 500), white surface gives higher values (> 500)
         line_threshold = 500
 
         # Calculate how many sensors detect the line
@@ -244,36 +198,7 @@ class Controller:
 
         return max(0.0, min(1.0, fitness))
 
-    # ============================================================================
-    # FITNESS FUNCTION 3: AVOID COLLISION FITNESS
-    # ============================================================================
     def avoidCollisionFitness(self):
-        """
-        Improved obstacle avoidance fitness function with line recovery
-
-        Goal: Avoid obstacles while maintaining awareness of the line position
-              and actively returning to the line after obstacle avoidance
-
-        Key improvements:
-        1. Detect obstacles and avoid them (primary goal)
-        2. Monitor line position during avoidance (secondary goal)
-        3. Guide robot back to line when obstacle is cleared (recovery behavior)
-
-        Args:
-            proximity_sensors: 8 proximity sensor readings [ps0-ps7]
-            left_speed: Left wheel speed
-            right_speed: Right wheel speed
-            danger_threshold: Danger distance threshold
-
-        Returns:
-            Fitness score [0, 1]
-
-        Design points:
-        1. Danger detection: Identify obstacles in front and sides
-        2. Avoidance response: Adjust wheel speeds based on obstacle position
-        3. Line awareness: Use ground sensors to stay oriented toward the line
-        4. Recovery behavior: After clearing obstacle, turn back toward the line
-        """
         sensor_values = []
         for sensor in self.proximity_sensors:
             sensor_values.append(sensor.getValue())
@@ -407,8 +332,6 @@ class Controller:
             speed_reduction = 1.0 - min(avg_speed / self.max_speed, 1.0)
             avoidance_score *= (0.7 + 0.3 * speed_reduction)
 
-        # Combined fitness score
-        # When obstacle is present: prioritize safety
         # When obstacle is clear: prioritize returning to line
         if front_obstacle:
             fitness = safety_score * 0.7 + avoidance_score * 0.3
@@ -433,29 +356,6 @@ class Controller:
         return max(0.0, fitness)
 
     def spinningFitness(self):
-        """
-        Spinning penalty function
-
-        Goal: Penalize in-place spinning and ineffective oscillation behavior
-
-        Principle:
-        - In-place spinning: Two wheels have equal speed in opposite directions
-        - Continuous oscillation: Frequently changing turning direction
-        - These behaviors waste time and don't help accomplish the task
-
-        Args:
-            left_speed: Left wheel speed
-            right_speed: Right wheel speed
-            angular_velocity_history: Historical angular velocity records
-
-        Returns: Penalty score [0, 1], 1 means no penalty, 0 means maximum penalty
-
-        Design points:
-        1. Detect in-place spinning: Speeds are opposite and similar in magnitude
-        2. Detect oscillation: Frequently changing turning direction
-        3. Allow necessary turning: Small turns are not penalized
-        4. Time penalty: Continuous spinning increases penalty
-        """
         # Calculate angular velocity (simplified model)
         # Positive value indicates counterclockwise rotation, negative value indicates clockwise rotation
         self.action_number += 1
@@ -503,17 +403,10 @@ class Controller:
             if direction_changes > 5:
                 oscillation_penalty = min(direction_changes / 10.0, 0.6)
                 return max(0, 1.0 - oscillation_penalty)
-
-        # if self.is_on_edge:
-        #     return 0.0
-        # print(max(abs(self.velocity_left), abs(self.velocity_right)))
-        # Slight turning is not penalized
         turn_ratio = abs(angular_velocity) / (speed_sum + 1e-6)
 
         if turn_ratio < 0.3:
             return 1.0
-
-        # Moderate turning gets slight penalty
         return max(0.0, 1.0 - turn_ratio * 0.2)
 
     def check_for_new_genes(self):
