@@ -96,7 +96,6 @@ class SupervisorGA:
             # Send genotype of an individual
             string_message = "genotype: "+str(self.emitterData)
             string_message = string_message.encode("utf-8")
-            #print("Supervisor send:", string_message)
             self.emitter.send(string_message)
         self.emitter.send("current_generation: {}".format(self.current_generation).encode("utf-8"))
         self.emitter.send("num_generations: {}".format(self.num_generations).encode("utf-8"))
@@ -104,9 +103,7 @@ class SupervisorGA:
         self.real_speed = (v[0]**2 + v[1]**2 + v[2]**2)**0.5
         self.emitter.send("real_speed: {}".format(self.real_speed).encode("utf-8"))
         pos = self.robot_node.getPosition()
-        # print("Position:",pos)
         self.emitter.send("position: {} ".format([pos[0],pos[1],pos[2]]).encode("utf-8"))
-        # print("position: {} ".format([pos[0],pos[1],pos[2]]))
 
 
 
@@ -221,8 +218,6 @@ class SupervisorGA:
 if __name__ == "__main__":
     # Call Supervisor function to initiate the supervisor module   
     gaModel = SupervisorGA()
-
-    
     # Function used to run the best individual or the GA
     keyboard = Keyboard()
     keyboard.enable(50)

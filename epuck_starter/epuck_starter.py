@@ -463,9 +463,6 @@ class Controller:
         self.right_motor.setVelocity(self.velocity_right*3)
 
     def calculate_fitness(self):
-        # pos = self.robot.getSelf().getPosition()
-        # print("Robot Position: x {:.3f} y {:.3f} z {:.3f}".format(pos[0],pos[1],pos[2]))
-        #
         ### Define the fitness function to increase the speed of the robot and 
         ### to encourage the robot to move forward only
         forwardFitness = self.forwardFitness()
@@ -489,17 +486,9 @@ class Controller:
         elif self.current_generation > 0.7 * self.num_generations and self.current_generation <=  self.num_generations:
             fitnessWeightsMapping = {"forwardFitness": 0.20, "followLineFitness": 0.4, "avoidCollisionFitness": 0.35,
                                      "spinningFitness": 0.05}
-        # if self.action_number % 100 == 0:
-        #     print("num_generatetions:", self.num_generations, " current_generation:", self.current_generation)
-        #     print("Fitness Weights Mapping:", fitnessWeightsMapping)
-
 
         ### Define the fitness function of this iteration which should be a combination of the previous functions         
         combinedFitness = forwardFitness*fitnessWeightsMapping['forwardFitness'] + followLineFitness*fitnessWeightsMapping['followLineFitness'] + avoidCollisionFitness*fitnessWeightsMapping['avoidCollisionFitness'] + spinningFitness*fitnessWeightsMapping['spinningFitness']
-        # if self.action_number % 100 == 0:
-        #     print("Fitness Components - Forward: {:.3f}, Line: {:.3f}, Avoid Collision: {:.3f}, Spinning Penalty: {:.3f}".format(forwardFitness, followLineFitness, avoidCollisionFitness, spinningFitness))
-        #     print("real speed:",self.real_speed)
-        #     print("combinedFiteness:,",combinedFitness)
         self.fitness_values.append(combinedFitness)
         self.fitness = np.mean(self.fitness_values) 
 
@@ -528,40 +517,26 @@ class Controller:
                 # self.receivedData = self.receiver.getData().decode("utf-8")
                 # Webots 2023: 
                 data_from_supervisor = self.receiver.getString()
-                # print("robot received:", self.receivedData)
-                # print(type(self.receivedData))
                 if data_from_supervisor.startswith("genotype: "):
-                    # print(data_from_supervisor)
                     self.receivedData = data_from_supervisor[11:-1]
                     self.receivedData = self.receivedData.split()
                     x = np.array(self.receivedData)
                     self.receivedData = x.astype(float)
-                    # print("Controller handle receiver data:", self.receivedData)
                 elif data_from_supervisor.startswith("current_generation: "):
                     generation_data = data_from_supervisor[20:len(data_from_supervisor)]
-                    # print("Received generation data:", data_from_supervisor)
                     self.current_generation = int(generation_data)
-                    # print("Controller handle receiver generation:", self.current_generation)
                 elif data_from_supervisor.startswith("num_generations: "):
                     num_generations = data_from_supervisor[17:len(data_from_supervisor)]
                     self.num_generations = int(num_generations)
-                    # print("Controller handle receiver population:", self.num_generations)
                 elif data_from_supervisor.startswith("real_speed: "):
                     speed_data = data_from_supervisor[12:len(data_from_supervisor)]
                     self.real_speed = float(speed_data)
-                    # print("Controller handle receiver real speed:", self.real_speed)
                 elif data_from_supervisor.startswith("position: "):
                     position_data = data_from_supervisor[10:len(data_from_supervisor)]
-                    # print("Received position data:", position_data)
-                    # Convert string representation of list to actual list
                     pos = eval(position_data)
                     x, y, z = pos
                     if abs(x) > 0.69 or abs(y) > 0.69:
                         self.is_on_edge = True
-                        # if self.is_on_edge:
-                        #     if self.action_number % 100 == 0:
-                        #         print("x,y:{},{}".format(x,y))
-                    # print("Controller handle receiver position:", position_list)
                     else:
                         self.is_on_edge = False
                 self.receiver.nextPacket()
