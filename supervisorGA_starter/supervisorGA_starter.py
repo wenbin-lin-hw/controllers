@@ -42,7 +42,7 @@ class SupervisorGA:
         self.current_generation=0
         
         ### Define here the GA Parameters
-        self.num_generations = 120
+        self.num_generations = 80
         self.num_population = 60
         self.num_elite = 6
         
